@@ -1,0 +1,2 @@
+docker build -t ocr_tesseract_web .
+docker run --name ocr_tesseract_web --publish 5000:5000 -it ocr_tesseract_web
