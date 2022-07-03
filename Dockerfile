@@ -31,6 +31,17 @@ ENV LANG=C.UTF-8
 
 EXPOSE 8050
 
+# Set environment variables per https://dev.to/pacheco/dockerize-a-flask-app-and-debug-with-vscode-34i1
+ENV FLASK_ENV="development"
+ENV FLASK_APP=app.py
+ENV FLASK_DEBUG=1
+
+# Keeps Python from generating .pyc files in the container
+ENV PYTHONDONTWRITEBYTECODE 1
+
+# Turns off buffering for easier container logging
+ENV PYTHONUNBUFFERED 1
+
 # Run app.py directly - this will run flask according to the parameters in app.run()
 # defaults to 5000, unless the parameters have been changed as it has been here to 8050
 CMD ["python3", "app.py"]
