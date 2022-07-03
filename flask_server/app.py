@@ -13,6 +13,9 @@ _VERSION = 1  # API version
 def main():
     return render_template('index.html')
 
+@app.route('/json')
+def json():
+    return jsonify({"message": "This is a sample route"})
 
 @app.route('/v{}/ocr'.format(_VERSION), methods=["POST"])
 def ocr():
@@ -38,5 +41,10 @@ def ocr():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000, threaded=True)
+    # cannot use host='0.0.0.0' on MacOs without a port since default port 5000 is already taken
+    # app.run(debug=True, host='0.0.0.0', threaded=True)
+
+    # use self signed adhoc ssl in order to use getUserMedia() which longer works on insecure origins
+    app.run(debug=True, host='0.0.0.0', threaded=True, ssl_context="adhoc", port=8050)
+
     print("--end--")

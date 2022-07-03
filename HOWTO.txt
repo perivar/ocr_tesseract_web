@@ -1,2 +1,13 @@
 docker build -t ocr_tesseract_web .
-docker run --name ocr_tesseract_web --publish 5000:5000 -it ocr_tesseract_web
+
+# if running flask on port 8050
+docker run --platform linux/amd64 -d -p 8050:8050 ocr_tesseract_web
+
+# if running on port 8050 interactive and output log (autoremove container)
+docker run --rm --platform linux/amd64 --name ocr_tesseract_web --publish 8050:8050 -it ocr_tesseract_web
+
+# if running app.py directly on default port (5000)
+docker run --platform linux/amd64 -d -p 8050:5000 ocr_tesseract_web
+
+# if running on default port (5000) interactive and output log (autoremove container)
+docker run --rm --platform linux/amd64 --name ocr_tesseract_web --publish 8050:5000 -it ocr_tesseract_web
