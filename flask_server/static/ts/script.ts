@@ -1,22 +1,20 @@
-var is_mobile = null;
+let has_camera = null;
 $(function () {
   // hide buttons
   $("#retry").hide();
   $("#results").hide();
 
-  // is_mobile = check_mobile();
-  is_mobile = true;
+  has_camera = hasCamera();
 
-  if (is_mobile) {
+  if (has_camera) {
     document.getElementById("pc_fileupload").style.display = "none";
 
     const submit = document.getElementById('submit') as HTMLInputElement | null;
     if (submit != null) {
       submit.value = "capture and text extraction";
-
     }
 
-    init_mob_cam();
+    initCamera();
   } else {
     document.getElementById("mob_camera").style.display = "none";
   }
@@ -26,7 +24,7 @@ $(function () {
   setRetryEvent();
 });
 
-var loadFile = function (event) {
+const loadFile = function (event) {
   const image = document.getElementById('image') as HTMLInputElement | null;
 
   if (image != null) {
@@ -34,27 +32,13 @@ var loadFile = function (event) {
   }
 };
 
-function check_mobile() {
-  if (
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    )
-  ) {
-    // true for mobile device
-    return true;
-  } else {
-    // false for not mobile device
-    return false;
-  }
-}
-
 // https://discuss.dizzycoding.com/how-do-i-take-picture-from-client-sidehtml-and-save-it-to-server-sidepython/
 function setSubmitEvent() {
   $("#submit").on("click", function (event) {
     $("#results").hide();
     const data = new FormData();
 
-    if (is_mobile) {
+    if (has_camera) {
       const captureFile = getCaptureImg();
       data.append("image", captureFile);
     } else {
@@ -100,36 +84,54 @@ function setRetryEvent() {
 }
 
 ////////////////////////////////////////////////////
-// Mobile - Iphone 7 checked!
+// Capture photo and convert to Blob
 ////////////////////////////////////////////////////
 
 // Set constraints for the video stream
-var cameraView = null;
-var cameraCapture = null;
-var constraints;
+let cameraView: HTMLVideoElement = null;
+let cameraCapture: HTMLCanvasElement = null;
 
-// Define constants
-async function init_mob_cam() {
+async function hasCamera() {
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    console.log("getUserMedia() not supported. No cameras exist.");
+    return false;
+  }
+
+  try {
+    await navigator.mediaDevices.getUserMedia({
+      video: true
+    });
+    console.log("Successfully found a camera!");
+    return true;
+  } catch (error) {
+    console.error("The browser has no access to a camera.");
+    return false;
+  }
+}
+
+async function initCamera() {
   cameraView = document.querySelector("#camera--view");
   cameraCapture = document.querySelector("#camera--capture");
-
-  constraints = { video: { facingMode: "user" }, audio: false };
-  cameraStart();
+  await cameraStart();
 }
 
 // Access the device camera and stream to cameraView
-async function cameraStart(): Promise<void> {
-  navigator.mediaDevices
-    .getUserMedia(constraints)
-    .then(function (stream) {
-      cameraView.srcObject = stream;
-    })
-    .catch(function (error) {
-      console.error("Oops. Something is broken.", error);
-    });
+async function cameraStart() {
+
+  // use rear camera or fallback to other camera if exist (i.e. don't use exact facingMode)
+  const constraints = { video: { facingMode: "environment" }, audio: false };
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    cameraView.srcObject = stream;
+    console.log("Successfully opened camera stream!");
+  } catch (error) {
+    console.error("The browser has no access to a camera.");
+  }
 }
 
-function capture_predict_mob() {
+function captureCameraImage() {
   cameraCapture.width = cameraView.videoWidth;
   cameraCapture.height = cameraView.videoHeight;
   cameraCapture.getContext("2d").drawImage(cameraView, 0, 0);
@@ -139,27 +141,23 @@ function capture_predict_mob() {
 
 //https://samanoske.tistory.com/94
 function extractImage(canvas) {
-  var imgDataUrl = canvas.toDataURL("image/jpeg");
+  const imgDataUrl = canvas.toDataURL("image/jpeg");
 
-  var blobBin = atob(imgDataUrl.split(",")[1]); // base64 data decoding
-  var array = [];
-  for (var i = 0; i < blobBin.length; i++) {
+  const blobBin = atob(imgDataUrl.split(",")[1]); // base64 data decoding
+  const array = [];
+  for (let i = 0; i < blobBin.length; i++) {
     array.push(blobBin.charCodeAt(i));
   }
 
-  var file = new Blob([new Uint8Array(array)], { type: "image/jpeg" }); // Blob produce
-
-  // var formData = new FormData(); // formData produce
-  // formData.append("image", file); // file data add
-  // return formData;
+  const file = new Blob([new Uint8Array(array)], { type: "image/jpeg" }); // Blob produce
   return file;
 }
 
 function getCaptureImg() {
-  var canvas = capture_predict_mob();
-  var cFile = extractImage(canvas);
+  const canvas = captureCameraImage();
+  const cFile = extractImage(canvas);
   return cFile;
 }
 ////////////////////////////////////////////////////////
-//end Mobile
+//end Capture photo and convert to Blob
 ////////////////////////////////////////////////////////

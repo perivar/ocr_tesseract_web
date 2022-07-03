@@ -34,20 +34,19 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var is_mobile = null;
+var has_camera = null;
 $(function () {
     // hide buttons
     $("#retry").hide();
     $("#results").hide();
-    // is_mobile = check_mobile();
-    is_mobile = true;
-    if (is_mobile) {
+    has_camera = hasCamera();
+    if (has_camera) {
         document.getElementById("pc_fileupload").style.display = "none";
         var submit = document.getElementById('submit');
         if (submit != null) {
             submit.value = "capture and text extraction";
         }
-        init_mob_cam();
+        initCamera();
     }
     else {
         document.getElementById("mob_camera").style.display = "none";
@@ -62,22 +61,12 @@ var loadFile = function (event) {
         image.src = URL.createObjectURL(event.target.files[0]);
     }
 };
-function check_mobile() {
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        // true for mobile device
-        return true;
-    }
-    else {
-        // false for not mobile device
-        return false;
-    }
-}
 // https://discuss.dizzycoding.com/how-do-i-take-picture-from-client-sidehtml-and-save-it-to-server-sidepython/
 function setSubmitEvent() {
     $("#submit").on("click", function (event) {
         $("#results").hide();
         var data = new FormData();
-        if (is_mobile) {
+        if (has_camera) {
             var captureFile = getCaptureImg();
             data.append("image", captureFile);
         }
@@ -119,41 +108,82 @@ function setRetryEvent() {
     });
 }
 ////////////////////////////////////////////////////
-// Mobile - Iphone 7 checked!
+// Capture photo and convert to Blob
 ////////////////////////////////////////////////////
 // Set constraints for the video stream
 var cameraView = null;
 var cameraCapture = null;
-var constraints;
-// Define constants
-function init_mob_cam() {
+function hasCamera() {
+    return __awaiter(this, void 0, void 0, function () {
+        var error_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        console.log("getUserMedia() not supported. No cameras exist.");
+                        return [2 /*return*/, false];
+                    }
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, navigator.mediaDevices.getUserMedia({
+                            video: true
+                        })];
+                case 2:
+                    _a.sent();
+                    console.log("Successfully found a camera!");
+                    return [2 /*return*/, true];
+                case 3:
+                    error_1 = _a.sent();
+                    console.error("The browser has no access to a camera.");
+                    return [2 /*return*/, false];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+function initCamera() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            cameraView = document.querySelector("#camera--view");
-            cameraCapture = document.querySelector("#camera--capture");
-            constraints = { video: { facingMode: "user" }, audio: false };
-            cameraStart();
-            return [2 /*return*/];
+            switch (_a.label) {
+                case 0:
+                    cameraView = document.querySelector("#camera--view");
+                    cameraCapture = document.querySelector("#camera--capture");
+                    return [4 /*yield*/, cameraStart()];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
         });
     });
 }
 // Access the device camera and stream to cameraView
 function cameraStart() {
     return __awaiter(this, void 0, void 0, function () {
+        var constraints, stream, error_2;
         return __generator(this, function (_a) {
-            navigator.mediaDevices
-                .getUserMedia(constraints)
-                .then(function (stream) {
-                cameraView.srcObject = stream;
-            })
-                .catch(function (error) {
-                console.error("Oops. Something is broken.", error);
-            });
-            return [2 /*return*/];
+            switch (_a.label) {
+                case 0:
+                    constraints = { video: { facingMode: "environment" }, audio: false };
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, navigator.mediaDevices.getUserMedia(constraints)];
+                case 2:
+                    stream = _a.sent();
+                    cameraView.srcObject = stream;
+                    console.log("Successfully opened camera stream!");
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_2 = _a.sent();
+                    console.error("The browser has no access to a camera.");
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
+            }
         });
     });
 }
-function capture_predict_mob() {
+function captureCameraImage() {
     cameraCapture.width = cameraView.videoWidth;
     cameraCapture.height = cameraView.videoHeight;
     cameraCapture.getContext("2d").drawImage(cameraView, 0, 0);
@@ -168,17 +198,14 @@ function extractImage(canvas) {
         array.push(blobBin.charCodeAt(i));
     }
     var file = new Blob([new Uint8Array(array)], { type: "image/jpeg" }); // Blob produce
-    // var formData = new FormData(); // formData produce
-    // formData.append("image", file); // file data add
-    // return formData;
     return file;
 }
 function getCaptureImg() {
-    var canvas = capture_predict_mob();
+    var canvas = captureCameraImage();
     var cFile = extractImage(canvas);
     return cFile;
 }
 ////////////////////////////////////////////////////////
-//end Mobile
+//end Capture photo and convert to Blob
 ////////////////////////////////////////////////////////
 //# sourceMappingURL=script.js.map
